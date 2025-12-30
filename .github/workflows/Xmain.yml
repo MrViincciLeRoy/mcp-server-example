@@ -1,0 +1,28 @@
+name: Quick MCP Server Check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install uv and dependencies
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        export PATH="$HOME/.cargo/bin:$PATH"
+        uv venv
+        uv pip install "mcp[cli]" httpx
+    
+    - name: Validate server starts
+      run: |
+        export PATH="$HOME/.cargo/bin:$PATH"
+        timeout 5 uv run main.py || [ $? -eq 124 ]
